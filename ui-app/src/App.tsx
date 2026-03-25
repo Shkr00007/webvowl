@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { AICopilot } from "components/AICopilot";
 import { GraphContainer } from "components/GraphContainer";
 import { Sidebar } from "components/Sidebar";
@@ -17,32 +17,37 @@ const createMessage = (role: AIMessage["role"], content: string): AIMessage => (
 const AppContent = () => {
   const { state, dispatch } = useAppState();
 
-  const sendUserMessage = async (content: string) => {
-    if (!content.trim()) return;
-    dispatch({ type: "appendAiMessage", payload: createMessage("user", content) });
-    dispatch({ type: "setAiLoading", payload: true });
+  const sendUserMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim()) return;
+      dispatch({ type: "appendAiMessage", payload: createMessage("user", content) });
+      dispatch({ type: "setAiLoading", payload: true });
 
-    try {
-      const response = await askOllama(content);
-      dispatch({ type: "appendAiMessage", payload: createMessage("assistant", response) });
-    } catch (error) {
-      dispatch({ type: "appendAiMessage", payload: createMessage("assistant", "AI service is currently unavailable.") });
-    } finally {
-      dispatch({ type: "setAiLoading", payload: false });
-    }
-  };
+      try {
+        const response = await askOllama(content);
+        dispatch({ type: "appendAiMessage", payload: createMessage("assistant", response) });
+      } catch {
+        dispatch({ type: "appendAiMessage", payload: createMessage("assistant", "AI service is currently unavailable.") });
+      } finally {
+        dispatch({ type: "setAiLoading", payload: false });
+      }
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
     if (!state.selectedNode) return;
 
     const prompt = `Explain this node in business terms. Node: ${state.selectedNode.label}. Type: ${state.selectedNode.type}. Connections: ${state.selectedNode.connections}.`;
     void sendUserMessage(prompt);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.selectedNode?.id]);
+  }, [state.selectedNode, sendUserMessage]);
 
-  const handleNodeClick = (node: GraphNode) => {
-    dispatch({ type: "setSelectedNode", payload: node });
-  };
+  const handleNodeClick = useCallback(
+    (node: GraphNode) => {
+      dispatch({ type: "setSelectedNode", payload: node });
+    },
+    [dispatch]
+  );
 
   return (
     <div className="grid h-screen grid-rows-[auto,1fr] bg-surface text-slate-100">
@@ -53,7 +58,7 @@ const AppContent = () => {
         }}
       />
 
-      <main className="grid grid-cols-[280px,1fr,380px] gap-4 p-4">
+      <main className="grid grid-cols-[300px,1fr,400px] gap-4 p-4">
         <Sidebar
           nodes={state.graphData.nodes}
           selectedNodeId={state.selectedNode?.id}
