@@ -188,6 +188,7 @@
             </ul>
             <!--Filter Menu-->
             <ul id="m_filter" class="toolTipMenu noselect">
+                <li class="toggleOption" id="classFilteringOption"></li>
                 <li class="toggleOption" id="datatypeFilteringOption"></li>
                 <li class="toggleOption" id="objectPropertyFilteringOption"></li>
                 <li class="toggleOption" id="subclassFilteringOption"></li>
@@ -476,6 +477,11 @@
             </div>
             <h3 class="accordion-trigger noselect" id="selection-details-trigger">Selection Details</h3>
             <div class="accordion-container" id="selection-details">
+                <div id="selectedNodeSummary" class="selection-summary">
+                    <p class="propDetails">Name: <span id="summaryNodeName">-</span></p>
+                    <p class="propDetails">Type: <span id="summaryNodeType">-</span></p>
+                    <p class="propDetails">Relationships: <span id="summaryNodeRelationships">-</span></p>
+                </div>
                 <div id="classSelectionInformation" class="hidden">
                     <p class="propDetails">Name: <span id="name"></span></p>
                     <p class="propDetails">Type: <span id="typeNode"></span></p>

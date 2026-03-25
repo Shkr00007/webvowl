@@ -1,4 +1,5 @@
 module.exports = function ( graph ){
+  var ttlParser = require("./ttlParser")();
   /** some constants **/
   var PREDEFINED = 0,
     FILE_UPLOAD = 1,
@@ -327,25 +328,8 @@ module.exports = function ( graph ){
     loadingModule.initializeLoader(false);
     
     ontologyMenu.append_bulletPoint("Retrieving ontology from dropped file: " + fileName);
-    var ontologyContent = "";
     
-    // two options here
-    //1] Direct Json Upload
-    if ( fileName.match(/\.json$/) ) {
-      ontologyMenu.setConversionID(-10000);
-      var reader = new FileReader();
-      reader.readAsText(file);
-      reader.onload = function (){
-        ontologyContent = reader.result;
-        ontologyIdentifierFromURL = fileName;
-        parseOntologyContent(ontologyContent);
-      };
-    } else {
-      //2] File Upload to OWL2VOWL Converter
-      // 1) check if we can get a timeStamp;
-      var parameterArray = [file, fileName];
-      requestServerTimeStamp(ontologyMenu.callbackLoadFromOntology, parameterArray);
-    }
+    parseUploadedOntologyFile(fileName, file);
   };
   
   
@@ -377,25 +361,46 @@ module.exports = function ( graph ){
       }
 
 
-// two options here
-//1] Direct Json Upload
-      if ( filename.match(/\.json$/) ) {
-        ontologyMenu.setConversionID(-10000);
-        var reader = new FileReader();
-        reader.readAsText(selectedFile);
-        reader.onload = function (){
-          ontologyContent = reader.result;
-          ontologyIdentifierFromURL = filename;
-          parseOntologyContent(ontologyContent);
-        };
-      } else {
-//2] File Upload to OWL2VOWL Converter
-        // 1) check if we can get a timeStamp;
-        var parameterArray = [selectedFile, filename];
-        requestServerTimeStamp(ontologyMenu.callbackLoadFromOntology, parameterArray);
-      }
+      parseUploadedOntologyFile(filename, selectedFile);
     }
   };
+
+  function parseUploadedOntologyFile( filename, file ){
+    ontologyMenu.setConversionID(-10000);
+    var reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = function (){
+      var fileContent = reader.result;
+      ontologyIdentifierFromURL = filename;
+      var lowered = filename.toLowerCase();
+
+      if ( lowered.match(/\.json$/) ) {
+        parseOntologyContent(fileContent);
+        return;
+      }
+
+      if ( lowered.match(/\.(ttl|n3|nt)$/) ) {
+        ontologyMenu.append_message_toLastBulletPoint("<br>Parsing RDF content in browser...");
+        ttlParser.convertTurtleToVowl(fileContent, filename)
+          .then(function ( convertedJson ){
+            parseOntologyContent(JSON.stringify(convertedJson));
+          })
+          .catch(function ( err ){
+            console.error(err);
+            ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red;'>Could not parse RDF file.</span>");
+            loadingModule.notValidJsonFile();
+            loadingModule.setErrorMode();
+            loadingModule.showErrorDetailsMessage();
+          });
+        return;
+      }
+
+      ontologyMenu.append_message_toLastBulletPoint("<br><span style='color:red;'>Unsupported file format. Please provide .json, .ttl, .n3 or .nt.</span>");
+      loadingModule.notValidJsonFile();
+      loadingModule.setErrorMode();
+      loadingModule.showErrorDetailsMessage();
+    };
+  }
   
   function fallbackForJSON_URL( callback, parameter ){
     ontologyMenu.append_message_toLastBulletPoint("<br>Trying to convert with other communication protocol.");
@@ -722,5 +727,3 @@ module.exports = function ( graph ){
   return loadingModule;
 }
 ;
-
-
