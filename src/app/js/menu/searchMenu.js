@@ -7,6 +7,7 @@
 module.exports = function ( graph ){
   var searchMenu = {},
     dictionary = [],
+    dictionaryLowerCase = [],
     entryNames = [],
     searchLineEdit,
     mergedStringsList,
@@ -44,6 +45,7 @@ module.exports = function ( graph ){
     labelDictionary = graph.getUpdateDictionary();
     dictionaryUpdateRequired = false;
     dictionary = [];
+    dictionaryLowerCase = [];
     entryNames = [];
     var idList = [];
     var stringList = [];
@@ -105,6 +107,7 @@ module.exports = function ( graph ){
       idListResult = idListResult + " ]";
       
       dictionary.push(aString);
+      dictionaryLowerCase.push(aString.toLowerCase());
       entryNames.push(aString);
     }
   }
@@ -261,23 +264,66 @@ module.exports = function ( graph ){
   
   function createSearchEntries(){
     inputText = searchLineEdit.node().value;
-    var i;
-    var lc_text = inputText.toLowerCase();
-    var token;
+    var lc_text = inputText.toLowerCase().trim();
+    var rankedResults = [];
     
-    for ( i = 0; i < dictionary.length; i++ ) {
-      var tokenElement = dictionary[i];
-      if ( tokenElement === undefined ) {
+    for ( var i = 0; i < dictionary.length; i++ ) {
+      if ( dictionary[i] === undefined ) {
         //@WORKAROUND : nodes with undefined labels are skipped
         //@FIX: these nodes are now not added to the dictionary
         continue;
       }
-      token = dictionary[i].toLowerCase();
-      if ( token.indexOf(lc_text) > -1 ) {
-        results.push(dictionary[i]);
-        resultID.push(i);
+      var score = fuzzyMatchScore(dictionaryLowerCase[i], lc_text);
+      if ( score > -1 ) {
+        rankedResults.push({
+          score: score,
+          entry: dictionary[i],
+          id: i
+        });
       }
     }
+    
+    rankedResults.sort(function ( a, b ){
+      return b.score - a.score;
+    });
+    
+    for ( i = 0; i < rankedResults.length; i++ ) {
+      results.push(rankedResults[i].entry);
+      resultID.push(rankedResults[i].id);
+    }
+  }
+  
+  function fuzzyMatchScore( token, query ){
+    if ( query.length === 0 ) {
+      return -1;
+    }
+    var exactIndex = token.indexOf(query);
+    if ( exactIndex === 0 ) {
+      return 1000 - token.length;
+    }
+    if ( exactIndex > 0 ) {
+      return 800 - exactIndex;
+    }
+    
+    // fallback to lightweight subsequence match for fuzzy input
+    var qIndex = 0;
+    var firstMatchIndex = -1;
+    var lastMatchIndex = -1;
+    for ( var tIndex = 0; tIndex < token.length && qIndex < query.length; tIndex++ ) {
+      if ( token[tIndex] === query[qIndex] ) {
+        if ( firstMatchIndex === -1 ) {
+          firstMatchIndex = tIndex;
+        }
+        lastMatchIndex = tIndex;
+        qIndex++;
+      }
+    }
+    if ( qIndex !== query.length ) {
+      return -1;
+    }
+    
+    var compactness = lastMatchIndex - firstMatchIndex;
+    return 500 - compactness - firstMatchIndex;
   }
   
   function measureTextWidth( text, textStyle ){
@@ -328,38 +374,14 @@ module.exports = function ( graph ){
   
   function createDropDownElements(){
     var numEntries;
-    var copyRes = results;
     var i;
-    var token;
-    var newResults = [];
-    var newResultsIds = [];
-    
-    var lc_text = searchLineEdit.node().value.toLowerCase();
     // set the number of shown results to be maxEntries or less;
     numEntries = results.length;
     if ( numEntries > maxEntries )
       numEntries = maxEntries;
     
-    
-    for ( i = 0; i < numEntries; i++ ) {
-      // search for the best entry
-      var indexElement = 1000000;
-      var lengthElement = 1000000;
-      var bestElement = -1;
-      for ( var j = 0; j < copyRes.length; j++ ) {
-        token = copyRes[j].toLowerCase();
-        var tIe = token.indexOf(lc_text);
-        var tLe = token.length;
-        if ( tIe > -1 && tIe <= indexElement && tLe <= lengthElement ) {
-          bestElement = j;
-          indexElement = tIe;
-          lengthElement = tLe;
-        }
-      }
-      newResults.push(copyRes[bestElement]);
-      newResultsIds.push(resultID[bestElement]);
-      copyRes[bestElement] = "";
-    }
+    var newResults = results.slice(0, numEntries);
+    var newResultsIds = resultID.slice(0, numEntries);
     
     // add the results to the entry menu
     //******************************************
@@ -491,6 +513,7 @@ module.exports = function ( graph ){
       
       graph.resetSearchHighlight();
       graph.highLightNodes(correspondingIds);
+      graph.locateSearchResult();
       c_locate.node().title = "Locate search term";
       if ( autoComStr !== inputText ) {
         handleAutoCompletion();
