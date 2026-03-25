@@ -1,24 +1,31 @@
 import { useMemo, useState } from "react";
 import type { AIMessage, GraphNode } from "types/app";
 
+type InsightsData = {
+  keyEntities: string[];
+  riskNodes: string[];
+  importantRelationships: string[];
+};
+
 type AICopilotProps = {
   selectedNode: GraphNode | null;
   messages: AIMessage[];
   loading: boolean;
+  insights: InsightsData;
   onSendMessage: (message: string) => Promise<void>;
-  onQuickAction: (action: "explain" | "relationships" | "risks") => Promise<void>;
+  onQuickAction: (action: "explain" | "risks" | "dependencies") => Promise<void>;
 };
 
 const parseSections = (text: string) => {
   const lines = text.split("\n").filter(Boolean);
   return {
-    summary: lines[0] ?? text,
-    relationships: lines[1] ?? "No relationship summary available.",
-    insights: lines[2] ?? "No additional insights available."
+    what: lines[0] ?? text,
+    why: lines[1] ?? "Business significance not yet available.",
+    impact: lines[2] ?? "Operational impact not yet available."
   };
 };
 
-export const AICopilot = ({ selectedNode, messages, loading, onSendMessage, onQuickAction }: AICopilotProps) => {
+export const AICopilot = ({ selectedNode, messages, loading, insights, onSendMessage, onQuickAction }: AICopilotProps) => {
   const [draft, setDraft] = useState("");
 
   const subtitle = useMemo(() => {
@@ -39,8 +46,8 @@ export const AICopilot = ({ selectedNode, messages, loading, onSendMessage, onQu
       <section className="mt-4 rounded-xl border border-border bg-surface p-4">
         <div className="mb-3 flex flex-wrap gap-2">
           <button onClick={() => void onQuickAction("explain")} className="rounded-full border border-border px-3 py-1 text-xs transition hover:border-accent">Explain</button>
-          <button onClick={() => void onQuickAction("relationships")} className="rounded-full border border-border px-3 py-1 text-xs transition hover:border-accent">Show relationships</button>
           <button onClick={() => void onQuickAction("risks")} className="rounded-full border border-border px-3 py-1 text-xs transition hover:border-accent">Find risks</button>
+          <button onClick={() => void onQuickAction("dependencies")} className="rounded-full border border-border px-3 py-1 text-xs transition hover:border-accent">Show dependencies</button>
         </div>
 
         {loading ? (
@@ -51,26 +58,19 @@ export const AICopilot = ({ selectedNode, messages, loading, onSendMessage, onQu
           </div>
         ) : (
           <div className="grid gap-2 text-sm">
-            <article className="rounded-lg border border-border p-3"><strong>Summary:</strong> {sections.summary}</article>
-            <article className="rounded-lg border border-border p-3"><strong>Relationships:</strong> {sections.relationships}</article>
-            <article className="rounded-lg border border-border p-3"><strong>Insights:</strong> {sections.insights}</article>
+            <article className="rounded-lg border border-border p-3"><strong>What it is:</strong> {sections.what}</article>
+            <article className="rounded-lg border border-border p-3"><strong>Why it matters:</strong> {sections.why}</article>
+            <article className="rounded-lg border border-border p-3"><strong>Impact:</strong> {sections.impact}</article>
           </div>
         )}
       </section>
 
-      <div className="mt-4 overflow-y-auto rounded-xl border border-border bg-surface p-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`mb-3 flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm transition-all ${
-                message.role === "user" ? "bg-accent text-white" : "bg-panel text-slate-200"
-              }`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-      </div>
+      <section className="mt-4 grid gap-2 rounded-xl border border-border bg-surface p-4 text-sm">
+        <h3 className="text-xs uppercase tracking-wider text-slate-500">Executive Insights</h3>
+        <p><strong>Key entities:</strong> {insights.keyEntities.join(", ") || "N/A"}</p>
+        <p><strong>Risk nodes:</strong> {insights.riskNodes.join(", ") || "N/A"}</p>
+        <p><strong>Important relationships:</strong> {insights.importantRelationships.join(", ") || "N/A"}</p>
+      </section>
 
       <form
         className="mt-4 flex gap-2"

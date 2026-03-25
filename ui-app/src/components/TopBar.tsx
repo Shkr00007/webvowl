@@ -2,10 +2,12 @@ import type { GraphNode } from "types/app";
 
 type TopBarProps = {
   selectedNode: GraphNode | null;
+  executiveMode: boolean;
+  onToggleExecutiveMode: () => void;
   onGenerateInsights: () => void;
 };
 
-export const TopBar = ({ selectedNode, onGenerateInsights }: TopBarProps) => {
+export const TopBar = ({ selectedNode, executiveMode, onToggleExecutiveMode, onGenerateInsights }: TopBarProps) => {
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-panel/90 px-6 backdrop-blur">
       <div>
@@ -17,6 +19,12 @@ export const TopBar = ({ selectedNode, onGenerateInsights }: TopBarProps) => {
         <div className="rounded-xl border border-border bg-surface px-3 py-2 text-xs text-slate-400 transition-colors">
           {selectedNode ? `Focused: ${selectedNode.label}` : "Focus a node"}
         </div>
+        <button
+          onClick={onToggleExecutiveMode}
+          className="rounded-xl border border-border bg-surface px-4 py-2 text-sm text-slate-100 transition-all hover:border-accent hover:text-white"
+        >
+          Executive Mode: {executiveMode ? "ON" : "OFF"}
+        </button>
         <button
           onClick={onGenerateInsights}
           className="rounded-xl border border-border bg-surface px-4 py-2 text-sm text-slate-100 transition-all hover:border-accent hover:text-white"

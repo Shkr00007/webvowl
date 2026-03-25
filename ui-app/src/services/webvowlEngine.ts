@@ -7,6 +7,7 @@ type MountOptions = {
 type MountedEngine = {
   focusNode: (node: GraphNode | null) => void;
   setFocusMode: (enabled: boolean) => void;
+  setExecutiveMode: (enabled: boolean) => void;
   zoomBy: (delta: number) => void;
   destroy: () => void;
 };
@@ -39,7 +40,7 @@ export const mountWebVowlBlackBox = async (container: HTMLDivElement, options: M
   container.innerHTML = "";
 
   const mountPoint = document.createElement("div");
-  mountPoint.className = "h-full w-full rounded-xl border border-border bg-surface transition-all duration-300";
+  mountPoint.className = "h-full w-full rounded-xl border border-border bg-surface transition-all duration-500";
   mountPoint.id = "webvowl-blackbox-mount";
   container.appendChild(mountPoint);
 
@@ -59,14 +60,20 @@ export const mountWebVowlBlackBox = async (container: HTMLDivElement, options: M
   return {
     focusNode: (node) => {
       mountPoint.setAttribute("data-focused-node", node?.id ?? "");
-      mountPoint.style.boxShadow = node ? "0 0 0 1px rgba(90,139,255,0.8), 0 12px 28px rgba(0,0,0,0.35)" : "";
+      mountPoint.style.boxShadow = node
+        ? "0 0 0 1px rgba(90,139,255,0.85), 0 24px 48px rgba(0,0,0,0.35)"
+        : "0 8px 18px rgba(0,0,0,0.25)";
     },
     setFocusMode: (enabled) => {
       mountPoint.style.opacity = enabled ? "0.95" : "1";
-      mountPoint.style.filter = enabled ? "contrast(1.05) saturate(1.1)" : "none";
+      mountPoint.style.filter = enabled ? "contrast(1.08) saturate(1.12) brightness(0.95)" : "none";
+    },
+    setExecutiveMode: (enabled) => {
+      mountPoint.style.borderStyle = enabled ? "dashed" : "solid";
+      mountPoint.style.borderColor = enabled ? "rgba(90,139,255,0.6)" : "";
     },
     zoomBy: (delta) => {
-      zoom = Math.max(0.8, Math.min(1.4, zoom + delta));
+      zoom = Math.max(0.85, Math.min(1.55, zoom + delta));
       mountPoint.style.transform = `scale(${zoom})`;
       mountPoint.style.transformOrigin = "center center";
     },

@@ -4,17 +4,19 @@ import type { GraphNode } from "types/app";
 
 type GraphContainerProps = {
   selectedNode: GraphNode | null;
+  executiveMode: boolean;
   onNodeClick: (node: GraphNode) => void;
 };
 
 type GraphController = {
   focusNode: (node: GraphNode | null) => void;
   setFocusMode: (enabled: boolean) => void;
+  setExecutiveMode: (enabled: boolean) => void;
   zoomBy: (delta: number) => void;
   destroy: () => void;
 };
 
-export const GraphContainer = ({ selectedNode, onNodeClick }: GraphContainerProps) => {
+export const GraphContainer = ({ selectedNode, executiveMode, onNodeClick }: GraphContainerProps) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const controllerRef = useRef<GraphController | null>(null);
   const [status, setStatus] = useState("Initializing");
@@ -35,6 +37,7 @@ export const GraphContainer = ({ selectedNode, onNodeClick }: GraphContainerProp
         }
         controllerRef.current = controller;
         controller.setFocusMode(focusMode);
+        controller.setExecutiveMode(executiveMode);
         setStatus("Interactive");
       })
       .catch(() => setStatus("Unavailable"));
@@ -48,11 +51,18 @@ export const GraphContainer = ({ selectedNode, onNodeClick }: GraphContainerProp
 
   useEffect(() => {
     controllerRef.current?.focusNode(selectedNode);
+    if (selectedNode) {
+      controllerRef.current?.zoomBy(0.08);
+    }
   }, [selectedNode]);
 
   useEffect(() => {
     controllerRef.current?.setFocusMode(focusMode);
   }, [focusMode]);
+
+  useEffect(() => {
+    controllerRef.current?.setExecutiveMode(executiveMode);
+  }, [executiveMode]);
 
   return (
     <section className="rounded-xl border border-border bg-panel p-6 shadow-lg shadow-black/20 transition-all duration-300">
