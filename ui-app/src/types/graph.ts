@@ -3,3 +3,8 @@ export interface GraphSelection {
   type: string;
   relationships: string;
 }
+
+export interface GraphNode {
+  id: string;
+  label: string;
+}

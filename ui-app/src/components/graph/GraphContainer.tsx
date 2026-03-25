@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { mountWebVowlBlackBox } from "services/webvowlEngine";
+
 import type { GraphSelection } from "types/graph";
 
 type GraphContainerProps = {
@@ -6,43 +8,28 @@ type GraphContainerProps = {
 };
 
 export const GraphContainer = ({ onSelectionChange }: GraphContainerProps) => {
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [status, setStatus] = useState("Loading WebVOWL engine...");
 
   useEffect(() => {
-    const iframe = frameRef.current;
-    if (!iframe) return;
+    const host = hostRef.current;
+    if (!host) return;
 
-    iframe.src = "/index.html#foaf";
+    mountWebVowlBlackBox(host)
+      .then(() => setStatus("WebVOWL engine mounted"))
+      .catch(() => setStatus("WebVOWL engine unavailable in this environment"));
 
-    const onLoad = () => {
-      const doc = iframe.contentDocument;
-      if (!doc) return;
-
-      const nameElement = doc.getElementById("summaryNodeName");
-      if (!nameElement) return;
-
-      const readText = (id: string) => doc.getElementById(id)?.textContent?.trim() ?? "-";
-      const observer = new MutationObserver(() => {
-        const label = readText("summaryNodeName");
-        if (label === "-") return;
-        onSelectionChange({
-          label,
-          type: readText("summaryNodeType"),
-          relationships: readText("summaryNodeRelationships")
-        });
-      });
-
-      observer.observe(nameElement, { childList: true, characterData: true, subtree: true });
-    };
-
-    iframe.addEventListener("load", onLoad);
-    return () => iframe.removeEventListener("load", onLoad);
+    // Placeholder event to demonstrate the React event bridge contract.
+    onSelectionChange({ label: "Person", type: "Class", relationships: "worksFor -> Organization" });
   }, [onSelectionChange]);
 
   return (
     <section className="rounded-2xl border border-border bg-panel p-3">
-      <div className="mb-2 text-xs uppercase tracking-wider text-slate-400">Graph</div>
-      <iframe ref={frameRef} title="Embedded WebVOWL" className="h-[74vh] w-full rounded-xl border border-border bg-surface" />
+      <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wider text-slate-400">
+        <span>Graph</span>
+        <span>{status}</span>
+      </div>
+      <div ref={hostRef} className="h-[74vh] w-full" />
     </section>
   );
 };

@@ -1,19 +1,20 @@
 # UI App Integration Plan
 
 ## Goal
-Use `/ui-app` as a separate frontend layer without modifying legacy WebVOWL UI files.
+Build `/ui-app` as a separate React + TypeScript + Tailwind frontend layer and keep legacy WebVOWL code untouched.
+
+## Principles
+- WebVOWL is a black-box graph engine.
+- React owns the product UI layout and interactions.
+- No D3 UI rendering in React components.
 
 ## Phase 1 (implemented)
-- New React + TypeScript + Tailwind app scaffold.
-- Three-panel layout + top navbar.
-- `GraphContainer` embeds legacy graph via iframe.
-- AI Copilot service wired to Ollama endpoint.
+- New app scaffold and architecture (`components`, `services`, `hooks`, `types`).
+- Modern layout: TopBar, Sidebar, GraphContainer, AI Copilot.
+- `GraphContainer` mounts WebVOWL runtime through a ref-based black-box bridge service.
+- Ollama integration service added for chat and node explanations.
 
 ## Phase 2
-- Add upload forwarding from React controls into embedded frame.
-- Add ontology explorer sync from iframe graph dictionary.
-- Add selection and graph-loaded telemetry events.
-
-## Phase 3
-- Replace iframe bridge with direct runtime wrapper once stable API contract is available.
-- Add auth, persistence, and enterprise analytics.
+- Replace placeholder selection bridge with stable runtime event adapter from WebVOWL.
+- Add ontology node sync from engine data.
+- Add upload + graph actions in TopBar.
