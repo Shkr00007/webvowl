@@ -35,6 +35,7 @@ module.exports = function ( graph ){
   };
   /**
    * Connects the website with graph filters.
+   * @param classFilter filter for all class nodes
    * @param datatypeFilter filter for all datatypes
    * @param objectPropertyFilter filter for all object properties
    * @param subclassFilter filter for all subclasses
@@ -42,7 +43,7 @@ module.exports = function ( graph ){
    * @param setOperatorFilter filter for all set operators with properties
    * @param nodeDegreeFilter filters nodes by their degree
    */
-  filterMenu.setup = function ( datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter ){
+  filterMenu.setup = function ( classFilter, datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter ){
     // TODO: is this here really necessarry? << new menu visualization style?
     menuControl.on("mouseover", function (){
       var searchMenu = graph.options().searchMenu();
@@ -52,6 +53,7 @@ module.exports = function ( graph ){
       filterMenu.highlightForDegreeSlider(false);
     });
     
+    addFilterItem(classFilter, "class", "Classes", "#classFilteringOption");
     addFilterItem(datatypeFilter, "datatype", "Datatype properties", "#datatypeFilteringOption");
     addFilterItem(objectPropertyFilter, "objectProperty", "Object properties", "#objectPropertyFilteringOption");
     addFilterItem(subclassFilter, "subclass", "Solitary subclasses", "#subclassFilteringOption");

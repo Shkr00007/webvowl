@@ -263,6 +263,7 @@ module.exports = function ( graph ){
   
   function showSelectionAdvice(){
     setSelectionInformationVisibility(false, false, true);
+    updateSelectionSummary(undefined);
   }
   
   function setSelectionInformationVisibility( showClasses, showProperties, showAdvice ){
@@ -273,6 +274,7 @@ module.exports = function ( graph ){
   
   function displayPropertyInformation( property ){
     showPropertyInformations();
+    updateSelectionSummary(property);
     
     setIriLabel(d3.select("#propname"), property.labelForCurrentLanguage(), property.iri());
     d3.select("#typeProp").text(property.type());
@@ -326,6 +328,63 @@ module.exports = function ( graph ){
   
   function showPropertyInformations(){
     setSelectionInformationVisibility(false, true, false);
+  }
+
+  function updateSelectionSummary( selectedElement ){
+    var nameElement = d3.select("#summaryNodeName");
+    var typeElement = d3.select("#summaryNodeType");
+    var relationshipsElement = d3.select("#summaryNodeRelationships");
+
+    if ( !selectedElement ) {
+      nameElement.text("-");
+      typeElement.text("-");
+      relationshipsElement.text("-");
+      return;
+    }
+
+    var selectedName = selectedElement.labelForCurrentLanguage ? selectedElement.labelForCurrentLanguage() : selectedElement.id();
+    nameElement.text(selectedName || "-");
+    typeElement.text(elementTools.isProperty(selectedElement) ? "property" : "class");
+    relationshipsElement.text(extractRelationshipSummary(selectedElement).join(", ") || "none");
+  }
+
+  function extractRelationshipSummary( selectedElement ){
+    var relationships = [];
+    if ( elementTools.isProperty(selectedElement) ) {
+      if ( selectedElement.domain ) {
+        relationships.push("domain: " + safeRelationshipLabel(selectedElement.domain()));
+      }
+      if ( selectedElement.range ) {
+        relationships.push("range: " + safeRelationshipLabel(selectedElement.range()));
+      }
+      if ( selectedElement.subproperties && selectedElement.subproperties().length > 0 ) {
+        relationships.push("subproperties: " + selectedElement.subproperties().length);
+      }
+      if ( selectedElement.superproperties && selectedElement.superproperties().length > 0 ) {
+        relationships.push("superproperties: " + selectedElement.superproperties().length);
+      }
+    } else {
+      if ( selectedElement.disjointWith && selectedElement.disjointWith().length > 0 ) {
+        relationships.push("disjoint: " + selectedElement.disjointWith().length);
+      }
+      if ( selectedElement.individuals && selectedElement.individuals().length > 0 ) {
+        relationships.push("individuals: " + selectedElement.individuals().length);
+      }
+      if ( selectedElement.equivalents && selectedElement.equivalents().length > 0 ) {
+        relationships.push("equivalents: " + selectedElement.equivalents().length);
+      }
+    }
+    return relationships;
+  }
+
+  function safeRelationshipLabel( relatedElement ){
+    if ( !relatedElement ) {
+      return "unknown";
+    }
+    if ( relatedElement.labelForCurrentLanguage ) {
+      return relatedElement.labelForCurrentLanguage() || relatedElement.id();
+    }
+    return relatedElement.id ? relatedElement.id() : "unknown";
   }
   
   function setIriLabel( element, name, iri ){
@@ -382,6 +441,7 @@ module.exports = function ( graph ){
   
   function displayNodeInformation( node ){
     showClassInformations();
+    updateSelectionSummary(node);
     
     setIriLabel(d3.select("#name"), node.labelForCurrentLanguage(), node.iri());
     

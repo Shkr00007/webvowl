@@ -33,6 +33,7 @@ module.exports = function (){
     // Graph modules
     colorExternalsSwitch = webvowl.modules.colorExternalsSwitch(graph),
     compactNotationSwitch = webvowl.modules.compactNotationSwitch(graph),
+    classFilter = webvowl.modules.classFilter(),
     datatypeFilter = webvowl.modules.datatypeFilter(),
     disjointFilter = webvowl.modules.disjointFilter(),
     focuser = webvowl.modules.focuser(graph),
@@ -195,6 +196,7 @@ module.exports = function (){
     options.filterModules().push(statistics);
     
     options.filterModules().push(nodeDegreeFilter);
+    options.filterModules().push(classFilter);
     options.filterModules().push(datatypeFilter);
     options.filterModules().push(objectPropertyFilter);
     options.filterModules().push(subclassFilter);
@@ -208,7 +210,7 @@ module.exports = function (){
     
     exportMenu.setup();
     gravityMenu.setup();
-    filterMenu.setup(datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter);
+    filterMenu.setup(classFilter, datatypeFilter, objectPropertyFilter, subclassFilter, disjointFilter, setOperatorFilter, nodeDegreeFilter);
     modeMenu.setup(pickAndPin, nodeScalingSwitch, compactNotationSwitch, colorExternalsSwitch);
     pauseMenu.setup();
     sidebar.setup();
