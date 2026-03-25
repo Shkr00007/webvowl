@@ -7,5 +7,9 @@
 }
 
 body {
-  @apply bg-surface;
+  @apply bg-surface text-slate-100;
+}
+
+* {
+  @apply antialiased;
 }
